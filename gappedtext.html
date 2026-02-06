@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Don't Be Targets of Scams - Interactive Activity</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Nunito:wght@400;700&display=swap');
+
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fdcb6e;
+            --bg-color: #ffeaa7;
+            --text-dark: #2d3436;
+            --slot-bg: #dfe6e9;
+            --correct: #00b894;
+            --wrong: #d63031;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(#fab1a0 20%, transparent 20%), radial-gradient(#fab1a0 20%, transparent 20%);
+            background-size: 50px 50px;
+            background-position: 0 0, 25px 25px;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Comic Neue', cursive;
+            text-align: center;
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .instructions {
+            background: #e1f0ff;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 5px solid var(--primary);
+            margin-bottom: 25px;
+        }
+
+        /* Layout: Text vs Options */
+        .activity-area {
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .activity-area {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        /* The Article Text */
+        .text-content {
+            flex: 2;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            text-align: justify;
+        }
+
+        .paragraph {
+            margin-bottom: 15px;
+        }
+
+        /* Drop Zones */
+        .drop-zone {
+            display: inline-flex;
+            min-width: 150px;
+            min-height: 40px;
+            border-bottom: 3px dashed var(--secondary);
+            background-color: rgba(162, 155, 254, 0.1);
+            margin: 0 5px;
+            vertical-align: middle;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .drop-zone.drag-over {
+            background-color: rgba(162, 155, 254, 0.3);
+            transform: scale(1.02);
+            border-bottom-color: var(--primary);
+        }
+
+        .drop-zone .draggable-item {
+            margin: 0;
+            width: 100%;
+            box-shadow: none;
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Options Sidebar */
+        .options-container {
+            flex: 1;
+            background: #f1f2f6;
+            padding: 15px;
+            border-radius: 15px;
+            position: sticky;
+            top: 20px;
+            border: 2px solid #dfe4ea;
+        }
+
+        .options-header {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .draggable-item {
+            background: white;
+            border: 2px solid var(--secondary);
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: grab;
+            font-size: 0.95rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .draggable-item:active {
+            cursor: grabbing;
+        }
+
+        .draggable-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+
+        /* Submit Button */
+        .btn-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Comic Neue', cursive;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.05);
+            background: #5649c0;
+        }
+
+        /* Modal / Scoreboard */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.5s;
+        }
+
+        .scoreboard {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Persian Cat SVG & Animation Styles */
+        .cat-container {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 20px auto;
+        }
+
+        .feedback-title {
+            font-family: 'Comic Neue', cursive;
+            font-size: 2rem;
+            margin: 10px 0;
+            color: var(--primary);
+        }
+
+        .feedback-msg {
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .answer-key {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #eee;
+        }
+        .answer-key h3 { margin-top: 0; color: var(--text-dark); }
+        .key-item { margin-bottom: 5px; font-size: 0.9rem; }
+        .key-label { font-weight: bold; color: var(--primary); margin-right: 5px; }
+
+        .restart-btn {
+            background: var(--accent);
+            color: var(--text-dark);
+            border: none;
+            padding: 10px 25px;
+            font-size: 1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        /* SVG Animation Classes */
+        #cat-svg .eye-pupil { transition: all 0.3s; }
+        #cat-svg .mouth { transition: d 0.3s; }
+        
+        /* Facepalm Paw */
+        .paw-facepalm { display: none; }
+        .cat-facepalm .paw-facepalm { display: block; animation: facepalmMove 1s ease-out; }
+        
+        /* Thumbs Up Paw */
+        .paw-thumb { display: none; }
+        .cat-thumb .paw-thumb { display: block; animation: thumbBounce 1s infinite alternate; }
+        
+        /* Love Eyes */
+        .eye-heart { display: none; fill: #e17055; }
+        .cat-love .eye-normal { display: none; }
+        .cat-love .eye-heart { display: block; animation: heartbeat 1.5s infinite; }
+        
+        /* Perplexed */
+        .cat-perplexed #head-group { transform-origin: center; animation: tiltHead 2s infinite ease-in-out; }
+        .cat-perplexed .mouth { d: path("M 70 110 Q 90 100 110 110"); }
+
+        /* Animations */
+        @keyframes heartbeat { 0% { transform: scale(1); transform-origin: center; } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        @keyframes thumbBounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+        @keyframes facepalmMove { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes tiltHead { 0% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } 100% { transform: rotate(0deg); } }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Don't Be Targets of Scams!</h1>
+    
+    <div class="instructions">
+        <strong>Instruction:</strong> Read the article below. Drag and drop the correct sentences (A - H) into the gaps (1 - 6). There are two extra sentences.
+    </div>
+
+    <div class="activity-area">
+        <div class="text-content">
+            <div class="paragraph">
+                Malaysians become easy targets of scams for being welcoming, trusting and sincere. (1) <div class="drop-zone" data-gap="1"></div>. When scammers call, many will entertain it without double-checking. We can make a video call to check the identity of the caller.
+            </div>
+
+            <div class="paragraph">
+                A scammer may claim to be a police officer or an officer from the Inland Revenue to scare you. Keep your calm and do not rush into answering to their request. Normally, you will be sent a notice regarding the matter. (2) <div class="drop-zone" data-gap="2"></div>. No one can make a police report over the phone.
+            </div>
+
+            <div class="paragraph">
+                The various popular scams are related to parcels, love and Macau scam. (3) <div class="drop-zone" data-gap="3"></div>. We cannot trace them. They are not physically harming you. They speak to you over the phone and you willingly transfer your money as they requested. In nearly all cases, you will not be able to recover the money lost. Whose fault is it?
+            </div>
+
+            <div class="paragraph">
+                If someone claims over the phone that you have a pending criminal record, just ignore it. To have peace of mind, go to the nearest police station. The love scams are more common. (4) <div class="drop-zone" data-gap="4"></div>. The scammers target them simply because they know that these retirees have money. They will strike up a relationship with you and eventually ask you to loan them some money, then more of it until you realise that it's a scam but it's too late to get the money back.
+            </div>
+
+            <div class="paragraph">
+                Some scammers focus on online investment. Many investor fell for scams that promised high returns in short term. Despite constant warnings from the mass media, these people still believe in the 'lucrative schemes' offered without understanding the capital market. The scammers had taken advantages of the investors' vulnerability or gullibility to earn quick money. (5) <div class="drop-zone" data-gap="5"></div>.
+            </div>
+
+            <div class="paragraph">
+                Despite n of advice and campaigns through the mass media about scams, the number of cases still exist now and then. (6) <div class="drop-zone" data-gap="6"></div>. Some have lost their life's saving to the tune of several hundred thousand ringgit. Don't be complacent and always stay alert.
+            </div>
+        </div>
+
+        <div class="options-container" id="options-pool">
+            <div class="options-header">Options (Drag these)</div>
+            
+            <div class="draggable-item" draggable="true" id="opt-A" data-val="A">
+                <strong>A.</strong> Don't answer any suspicious call.
+            </div>
+            <div class="draggable-item" draggable="true" id="opt-B" data-val="B">
+                <strong>B.</strong> The advice is to deal only with registered or licensed companies when investing in the capital market.
+            </div>
+            <div class="draggable-item" draggable="true" id="opt-C" data-val="C">
+                <strong>C.</strong> Tell the scammer you will check out at the nearest police station.
+            </div>
+            <div class="draggable-item" draggable="true" id="opt-D" data-val="D">
+                <strong>D.</strong> Call the police immediately.
+            </div>
+            <div class="draggable-item" draggable="true" id="opt-E" data-val="E">
+                <strong>E.</strong> We trust people too quickly.
+            </div>
+            <div class="draggable-item" draggable="true" id="opt-F" data-val="F">
+                <strong>F.</strong> Loneliness, greed and undue fear are the main weakness of victims of scams.
+            </div>
+            <div class="draggable-item" draggable="true" id="opt-G" data-val="G">
+                <strong>G.</strong> It is difficult to charge scammers.
+            </div>
+            <div class="draggable-item" draggable="true" id="opt-H" data-val="H">
+                <strong>H.</strong> Retirees especially single ladies or even men had better beware.
+            </div>
+        </div>
+    </div>
+
+    <div class="btn-container">
+        <button class="submit-btn" onclick="checkAnswers()">Submit & Check</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+    <div class="scoreboard">
+        <div class="cat-container" id="cat-wrapper">
+            <svg id="cat-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <g id="head-group">
+                    <circle cx="100" cy="100" r="70" fill="#f5f6fa" stroke="#dfe6e9" stroke-width="3"/>
+                    <path d="M 40 50 L 60 90 L 30 90 Z" fill="#f5f6fa" stroke="#dfe6e9" stroke-width="3"/>
+                    <path d="M 160 50 L 140 90 L 170 90 Z" fill="#f5f6fa" stroke="#dfe6e9" stroke-width="3"/>
+                    <polygon points="45,60 55,80 35,80" fill="#ffcccc" />
+                    <polygon points="155,60 145,80 165,80" fill="#ffcccc" />
+                    <path d="M 30 100 Q 20 110 30 120 Q 20 130 35 140" fill="none" stroke="#dfe6e9" stroke-width="3"/>
+                    <path d="M 170 100 Q 180 110 170 120 Q 180 130 165 140" fill="none" stroke="#dfe6e9" stroke-width="3"/>
+                    
+                    <ellipse cx="100" cy="115" rx="6" ry="4" fill="#fab1a0" />
+                    
+                    <g class="eye-normal">
+                        <circle cx="75" cy="95" r="10" fill="#2d3436" />
+                        <circle cx="125" cy="95" r="10" fill="#2d3436" />
+                        <circle cx="78" cy="92" r="3" fill="white" />
+                        <circle cx="128" cy="92" r="3" fill="white" />
+                    </g>
+                    <g class="eye-heart">
+                        <path d="M 75 95 m -10,0 a 10,10 0 1,0 20,0 a 10,10 0 1,0 -20,0" fill="#ff7675" transform="translate(-10,0) scale(1.5)" /> 
+                        <path d="M70 90 C 65 85, 60 85, 60 95 C 60 105, 75 115, 75 115 C 75 115, 90 105, 90 95 C 90 85, 85 85, 80 90 L 75 95 L 70 90" fill="#ff7675" />
+                        <path d="M120 90 C 115 85, 110 85, 110 95 C 110 105, 125 115, 125 115 C 125 115, 140 105, 140 95 C 140 85, 135 85, 130 90 L 125 95 L 120 90" fill="#ff7675" />
+                    </g>
+                    
+                    <path class="mouth" d="M 90 125 Q 100 130 110 125" fill="none" stroke="#2d3436" stroke-width="3" stroke-linecap="round" />
+                    
+                    <line x1="130" y1="120" x2="170" y2="115" stroke="#b2bec3" stroke-width="1" />
+                    <line x1="130" y1="125" x2="170" y2="128" stroke="#b2bec3" stroke-width="1" />
+                    <line x1="70" y1="120" x2="30" y2="115" stroke="#b2bec3" stroke-width="1" />
+                    <line x1="70" y1="125" x2="30" y2="128" stroke="#b2bec3" stroke-width="1" />
+
+                    <g class="paw-thumb" transform="translate(130, 130) rotate(-10)">
+                        <circle cx="10" cy="10" r="15" fill="#f5f6fa" stroke="#dfe6e9" stroke-width="2"/>
+                        <path d="M 5 15 L 5 -5 Q 5 -15 15 -5 L 15 15 Z" fill="#f5f6fa" stroke="#dfe6e9" stroke-width="2"/> 
+                    </g>
+                    
+                    <g class="paw-facepalm" transform="translate(60, 60)">
+                        <rect x="0" y="0" width="80" height="40" rx="15" fill="#f5f6fa" stroke="#dfe6e9" stroke-width="2" />
+                        <line x1="20" y1="10" x2="20" y2="30" stroke="#dfe6e9" stroke-width="2"/>
+                        <line x1="40" y1="10" x2="40" y2="30" stroke="#dfe6e9" stroke-width="2"/>
+                        <line x1="60" y1="10" x2="60" y2="30" stroke="#dfe6e9" stroke-width="2"/>
+                    </g>
+                </g>
+            </svg>
+        </div>
+
+        <h2 class="feedback-title" id="score-text">Score: 0/6</h2>
+        <div class="feedback-msg" id="feedback-phrase">...</div>
+
+        <div class="answer-key">
+            <h3>Correct Answers:</h3>
+            <div class="key-item"><span class="key-label">1:</span> (E) We trust people too quickly.</div>
+            <div class="key-item"><span class="key-label">2:</span> (C) Tell the scammer you will check out at the nearest police station.</div>
+            <div class="key-item"><span class="key-label">3:</span> (G) It is difficult to charge scammers.</div>
+            <div class="key-item"><span class="key-label">4:</span> (H) Retirees especially single ladies or even men had better beware.</div>
+            <div class="key-item"><span class="key-label">5:</span> (B) The advice is to deal only with registered or licensed companies...</div>
+            <div class="key-item"><span class="key-label">6:</span> (F) Loneliness, greed and undue fear are the main weakness...</div>
+        </div>
+
+        <button class="restart-btn" onclick="location.reload()">Play Again</button>
+    </div>
+</div>
+
+<script>
+    const draggables = document.querySelectorAll('.draggable-item');
+    const dropZones = document.querySelectorAll('.drop-zone');
+    const optionsPool = document.getElementById('options-pool');
+
+    // Drag and Drop Events
+    draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', () => {
+            draggable.classList.add('dragging');
+        });
+
+        draggable.addEventListener('dragend', () => {
+            draggable.classList.remove('dragging');
+        });
+    });
+
+    dropZones.forEach(zone => {
+        zone.addEventListener('dragover', e => {
+            e.preventDefault();
+            zone.classList.add('drag-over');
+        });
+
+        zone.addEventListener('dragleave', () => {
+            zone.classList.remove('drag-over');
+        });
+
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const draggable = document.querySelector('.dragging');
+            
+            // If the zone already has a child that is not the dragging one
+            if (zone.children.length > 0 && zone.children[0] !== draggable) {
+                // Move the existing child back to options pool
+                const existingChild = zone.children[0];
+                optionsPool.appendChild(existingChild);
+            }
+            
+            zone.appendChild(draggable);
+        });
+    });
+
+    // Allow dropping back to options pool
+    optionsPool.addEventListener('dragover', e => {
+        e.preventDefault();
+    });
+
+    optionsPool.addEventListener('drop', e => {
+        e.preventDefault();
+        const draggable = document.querySelector('.dragging');
+        optionsPool.appendChild(draggable);
+    });
+
+    // Logic
+    function checkAnswers() {
+        const key = {
+            1: 'E',
+            2: 'C',
+            3: 'G',
+            4: 'H',
+            5: 'B',
+            6: 'F'
+        };
+
+        let score = 0;
+
+        // Check each zone
+        for (let i = 1; i <= 6; i++) {
+            const zone = document.querySelector(`.drop-zone[data-gap="${i}"]`);
+            if (zone.children.length > 0) {
+                const answer = zone.children[0].getAttribute('data-val');
+                if (answer === key[i]) {
+                    score++;
+                }
+            }
+        }
+
+        showResult(score);
+    }
+
+    function showResult(score) {
+        const modal = document.getElementById('resultModal');
+        const scoreText = document.getElementById('score-text');
+        const phrase = document.getElementById('feedback-phrase');
+        const catContainer = document.getElementById('cat-wrapper');
+        const catMouth = document.querySelector('#cat-svg .mouth');
+
+        // Reset Cat Classes
+        catContainer.className = 'cat-container';
+        // Reset Mouth
+        catMouth.setAttribute('d', 'M 90 125 Q 100 130 110 125'); // Smile default
+
+        scoreText.innerText = `Score: ${score}/6`;
+
+        // Logic for Cat Emotion and Phrase
+        if (score === 6) {
+            // Full Score: Love
+            catContainer.classList.add('cat-love');
+            phrase.innerText = "Fantastic! You're the bomb!";
+            phrase.style.color = "#d63031"; // red/pinkish
+            // Big smile
+            catMouth.setAttribute('d', 'M 80 120 Q 100 145 120 120');
+        } 
+        else if (score >= 4) {
+            // 4-5: Thumbs up
+            catContainer.classList.add('cat-thumb');
+            phrase.innerText = "Way to go! You can do it!";
+            phrase.style.color = "#00b894";
+            // Grin
+            catMouth.setAttribute('d', 'M 80 125 Q 100 140 120 125');
+        } 
+        else if (score === 3) {
+            // 3: Neutral
+            phrase.innerText = "Just nice, but you can do better!";
+            phrase.style.color = "#e67e22";
+            // Straight mouth
+            catMouth.setAttribute('d', 'M 85 130 L 115 130');
+        } 
+        else if (score >= 1) {
+            // 1-2: Perplexed
+            catContainer.classList.add('cat-perplexed');
+            phrase.innerText = "You need to work hard! Gambate!";
+            phrase.style.color = "#6c5ce7";
+            // Squiggle mouth
+            catMouth.setAttribute('d', 'M 85 130 Q 95 120 105 130');
+        } 
+        else {
+            // 0: Facepalm
+            catContainer.classList.add('cat-facepalm');
+            phrase.innerText = "OMG!!! What happened?!";
+            phrase.style.color = "#d63031";
+            // Open mouth shock
+            catMouth.setAttribute('d', 'M 90 125 A 5 5 0 1 1 110 125 A 5 5 0 1 1 90 125');
+        }
+
+        modal.style.display = 'flex';
+    }
+</script>
+
+</body>
+</html>
